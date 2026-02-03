@@ -164,6 +164,90 @@
             margin-bottom: 20px;
         }
 
+        /* Modal de Seleção de Naipes */
+        .suit-selector-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .suit-selector-modal.active {
+            display: flex;
+        }
+
+        .suit-selector-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .suit-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .suit-card {
+            width: 150px;
+            height: 210px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .suit-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .suit-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Modal de Seleção de Cartas */
+        .card-selector-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1002;
+        }
+
+        .card-selector-modal.active {
+            display: flex;
+        }
+
+        .card-selector-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
         /* Quiz Styles */
         .quiz-container {
             width: 100%;
@@ -227,19 +311,6 @@
             font-size: 0.9em;
             font-weight: bold;
             color: #667eea;
-        }
-
-        .card-selector {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-top: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            display: none;
-        }
-
-        .card-selector.active {
-            display: block;
         }
 
         .selector-title {
@@ -316,8 +387,32 @@
             border-radius: 10px;
         }
 
+        .card-selector-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .card-selector-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .card-selector-content::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
         .hidden {
             display: none !important;
+        }
+
+        .back-button {
+            margin-top: 20px;
+            background: #6b7280;
+            color: white;
+        }
+
+        .back-button:hover {
+            background: #4b5563;
         }
 
         @media (max-width: 768px) {
@@ -336,6 +431,21 @@
 
             .modal-card {
                 min-height: 150px;
+            }
+
+            .suit-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .suit-card {
+                width: 120px;
+                height: 168px;
+            }
+
+            .card-selector-content {
+                max-width: 90%;
+                padding: 20px;
             }
         }
     </style>
@@ -373,13 +483,6 @@
             </h2>
             <div class="sequence-display" id="sequenceDisplay"></div>
 
-            <div class="card-selector" id="cardSelector">
-                <h3 class="selector-title" id="selectorTitle">
-                    Selecione a carta da posição 1
-                </h3>
-                <div class="card-grid" id="cardGrid"></div>
-            </div>
-
             <div class="controls" style="margin-top: 30px;">
                 <button class="btn-success" id="btnCheckAnswers" disabled>
                     Verificar Respostas
@@ -406,13 +509,47 @@
             </button>
         </div>
 
-        <!-- Modal -->
+        <!-- Modal de Memorização -->
         <div class="modal-overlay" id="modalOverlay">
             <div class="modal-content">
                 <h2 class="modal-title">Memorize esta carta</h2>
                 <div class="modal-card" id="modalCard"></div>
                 <button class="btn-primary" id="btnCardMemorized">
                     Carta Memorizada ✓
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal de Seleção de Naipes -->
+        <div class="suit-selector-modal" id="suitSelectorModal">
+            <div class="suit-selector-content">
+                <h2 class="modal-title">Escolha o naipe</h2>
+                <div class="suit-grid" id="suitGrid">
+                    <div class="suit-card" data-suit="H">
+                        <img src="https://deckofcardsapi.com/static/img/AH.png" alt="Copas">
+                    </div>
+                    <div class="suit-card" data-suit="D">
+                        <img src="https://deckofcardsapi.com/static/img/AD.png" alt="Ouros">
+                    </div>
+                    <div class="suit-card" data-suit="C">
+                        <img src="https://deckofcardsapi.com/static/img/AC.png" alt="Paus">
+                    </div>
+                    <div class="suit-card" data-suit="S">
+                        <img src="https://deckofcardsapi.com/static/img/AS.png" alt="Espadas">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Seleção de Cartas -->
+        <div class="card-selector-modal" id="cardSelectorModal">
+            <div class="card-selector-content">
+                <h3 class="selector-title" id="selectorTitle">
+                    Selecione a carta da posição 1
+                </h3>
+                <div class="card-grid" id="cardGrid"></div>
+                <button class="btn-primary back-button" id="btnBackToSuits">
+                    ← Voltar aos Naipes
                 </button>
             </div>
         </div>
@@ -427,7 +564,8 @@
             gamePhase: 'memorizing', // memorizing, quiz, results
             selectedPosition: null,
             quizAnswers: [],
-            score: 0
+            score: 0,
+            selectedSuit: null
         };
 
         // URL base para as imagens das cartas
@@ -463,7 +601,6 @@
             gameArea: document.getElementById('gameArea'),
             quizContainer: document.getElementById('quizContainer'),
             sequenceDisplay: document.getElementById('sequenceDisplay'),
-            cardSelector: document.getElementById('cardSelector'),
             selectorTitle: document.getElementById('selectorTitle'),
             cardGrid: document.getElementById('cardGrid'),
             btnCheckAnswers: document.getElementById('btnCheckAnswers'),
@@ -475,7 +612,11 @@
             btnPlayAgain: document.getElementById('btnPlayAgain'),
             modalOverlay: document.getElementById('modalOverlay'),
             modalCard: document.getElementById('modalCard'),
-            btnCardMemorized: document.getElementById('btnCardMemorized')
+            btnCardMemorized: document.getElementById('btnCardMemorized'),
+            suitSelectorModal: document.getElementById('suitSelectorModal'),
+            suitGrid: document.getElementById('suitGrid'),
+            cardSelectorModal: document.getElementById('cardSelectorModal'),
+            btnBackToSuits: document.getElementById('btnBackToSuits')
         };
 
         // Inicializar jogo
@@ -486,9 +627,53 @@
             gameState.gamePhase = 'memorizing';
             gameState.selectedPosition = null;
             gameState.score = 0;
+            gameState.selectedSuit = null;
 
             updateUI();
-            renderCardGrid();
+            setupSuitSelector();
+        }
+
+        // Configurar seletor de naipes
+        function setupSuitSelector() {
+            const suitCards = elements.suitGrid.querySelectorAll('.suit-card');
+            suitCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const suit = card.dataset.suit;
+                    handleSuitSelect(suit);
+                });
+            });
+        }
+
+        // Selecionar naipe
+        function handleSuitSelect(suit) {
+            gameState.selectedSuit = suit;
+            elements.suitSelectorModal.classList.remove('active');
+            renderCardGridBySuit(suit);
+            elements.cardSelectorModal.classList.add('active');
+        }
+
+        // Renderizar grid de cartas filtrado por naipe
+        function renderCardGridBySuit(suit) {
+            elements.cardGrid.innerHTML = '';
+            
+            const filteredCards = gameState.deck.filter(card => card.naipe === suit);
+            
+            filteredCards.forEach(card => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'selectable-card';
+                
+                const img = document.createElement('img');
+                img.src = card.imageUrl;
+                img.alt = card.display;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'contain';
+                img.style.borderRadius = '8px';
+                
+                cardDiv.appendChild(img);
+                cardDiv.addEventListener('click', () => handleCardSelect(card));
+                elements.cardGrid.appendChild(cardDiv);
+            });
         }
 
         // Atualizar interface
@@ -591,10 +776,11 @@
 
         // Clique em posição do quiz
         function handlePositionClick(index) {
-            // Permitir trocar a carta mesmo se já tiver sido selecionada
             gameState.selectedPosition = index;
             elements.selectorTitle.textContent = `Selecione a carta da posição ${index + 1}`;
-            elements.cardSelector.classList.add('active');
+            
+            // Mostrar modal de seleção de naipes
+            elements.suitSelectorModal.classList.add('active');
             
             // Destacar carta selecionada
             document.querySelectorAll('.sequence-card').forEach((card, i) => {
@@ -606,32 +792,10 @@
             });
         }
 
-        // Renderizar grid de cartas
-        function renderCardGrid() {
-            elements.cardGrid.innerHTML = '';
-            
-            gameState.deck.forEach(card => {
-                const cardDiv = document.createElement('div');
-                cardDiv.className = 'selectable-card';
-                
-                const img = document.createElement('img');
-                img.src = card.imageUrl;
-                img.alt = card.display;
-                img.style.width = '100%';
-                img.style.height = '100%';
-                img.style.objectFit = 'contain';
-                img.style.borderRadius = '8px';
-                
-                cardDiv.appendChild(img);
-                cardDiv.addEventListener('click', () => handleCardSelect(card));
-                elements.cardGrid.appendChild(cardDiv);
-            });
-        }
-
         // Selecionar carta
         function handleCardSelect(card) {
             gameState.quizAnswers[gameState.selectedPosition] = card;
-            elements.cardSelector.classList.remove('active');
+            elements.cardSelectorModal.classList.remove('active');
             
             // Remover seleção
             document.querySelectorAll('.sequence-card').forEach(c => {
@@ -640,6 +804,13 @@
             
             renderQuiz();
             gameState.selectedPosition = null;
+            gameState.selectedSuit = null;
+        }
+
+        // Voltar para seleção de naipes
+        function handleBackToSuits() {
+            elements.cardSelectorModal.classList.remove('active');
+            elements.suitSelectorModal.classList.add('active');
         }
 
         // Atualizar botão de verificar
@@ -735,6 +906,7 @@
         elements.btnResetQuiz.addEventListener('click', resetGame);
         elements.btnCheckAnswers.addEventListener('click', checkAnswers);
         elements.btnPlayAgain.addEventListener('click', resetGame);
+        elements.btnBackToSuits.addEventListener('click', handleBackToSuits);
 
         // Iniciar o jogo
         initGame();
