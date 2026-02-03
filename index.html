@@ -151,9 +151,11 @@
         }
 
         .modal-card {
-            font-size: 120px;
             margin: 20px 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
         }
 
         .modal-title {
@@ -174,10 +176,11 @@
 
         .sequence-display {
             display: flex;
-            gap: 15px;
-            justify-content: center;
+            gap: 60px;
+            justify-content: left;
             flex-wrap: wrap;
             margin-bottom: 30px;
+            position: relative;
         }
 
         .sequence-card {
@@ -204,6 +207,7 @@
 
         .sequence-card.incorrect {
             border: 3px solid #ef4444;
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5);
         }
 
         .card-back {
@@ -213,22 +217,10 @@
             object-fit: cover;
         }
 
-        .card-front {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 60px;
-            background: white;
-            border-radius: 8px;
-            border: 2px solid #ddd;
-        }
-
         .card-number {
             position: absolute;
-            top: 5px;
-            left: 5px;
+            top: 38px;
+            right: 23px;
             background: rgba(255, 255, 255, 0.9);
             padding: 3px 8px;
             border-radius: 5px;
@@ -342,12 +334,8 @@
                 height: 100px;
             }
 
-            .card-front {
-                font-size: 40px;
-            }
-
             .modal-card {
-                font-size: 80px;
+                min-height: 150px;
             }
         }
     </style>
@@ -442,20 +430,23 @@
             score: 0
         };
 
+        // URL base para as imagens das cartas
+        const CARD_API_URL = "https://deckofcardsapi.com/static/img/";
+
         // Criar baralho com 52 cartas
         function createDeck() {
-            const suits = ['♠', '♥', '♦', '♣'];
-            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            const nums = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "0", "J", "Q", "K"];
+            const naipes = ["H", "C", "S", "D"];
             const deck = [];
 
-            suits.forEach(suit => {
-                values.forEach(value => {
+            naipes.forEach(naipe => {
+                nums.forEach(num => {
                     deck.push({
-                        id: `${value}${suit}`,
-                        value: value,
-                        suit: suit,
-                        display: `${value}${suit}`,
-                        color: (suit === '♥' || suit === '♦') ? 'red' : 'black'
+                        id: `${num}${naipe}`,
+                        num: num,
+                        naipe: naipe,
+                        imageUrl: `${CARD_API_URL}${num}${naipe}.png`,
+                        display: `${num}${naipe}`
                     });
                 });
             });
@@ -538,8 +529,7 @@
 
         // Mostrar modal
         function showModal(card) {
-            elements.modalCard.textContent = card.display;
-            elements.modalCard.style.color = card.color;
+            elements.modalCard.innerHTML = `<img src="${card.imageUrl}" alt="${card.display}" style="max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.3);">`;
             elements.modalOverlay.classList.add('active');
         }
 
@@ -579,11 +569,11 @@
                 cardDiv.appendChild(numberSpan);
 
                 if (gameState.quizAnswers[index]) {
-                    const frontDiv = document.createElement('div');
-                    frontDiv.className = 'card-front';
-                    frontDiv.style.color = gameState.quizAnswers[index].color;
-                    frontDiv.textContent = gameState.quizAnswers[index].display;
-                    cardDiv.appendChild(frontDiv);
+                    const img = document.createElement('img');
+                    img.src = gameState.quizAnswers[index].imageUrl;
+                    img.alt = gameState.quizAnswers[index].display;
+                    img.className = 'card-back';
+                    cardDiv.appendChild(img);
                 } else {
                     const img = document.createElement('img');
                     img.src = './JNA_baralho_verso.png';
@@ -601,20 +591,19 @@
 
         // Clique em posição do quiz
         function handlePositionClick(index) {
-            if (gameState.quizAnswers[index] === null) {
-                gameState.selectedPosition = index;
-                elements.selectorTitle.textContent = `Selecione a carta da posição ${index + 1}`;
-                elements.cardSelector.classList.add('active');
-                
-                // Destacar carta selecionada
-                document.querySelectorAll('.sequence-card').forEach((card, i) => {
-                    if (i === index) {
-                        card.classList.add('selected');
-                    } else {
-                        card.classList.remove('selected');
-                    }
-                });
-            }
+            // Permitir trocar a carta mesmo se já tiver sido selecionada
+            gameState.selectedPosition = index;
+            elements.selectorTitle.textContent = `Selecione a carta da posição ${index + 1}`;
+            elements.cardSelector.classList.add('active');
+            
+            // Destacar carta selecionada
+            document.querySelectorAll('.sequence-card').forEach((card, i) => {
+                if (i === index) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
         }
 
         // Renderizar grid de cartas
@@ -624,8 +613,16 @@
             gameState.deck.forEach(card => {
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'selectable-card';
-                cardDiv.style.color = card.color;
-                cardDiv.textContent = card.display;
+                
+                const img = document.createElement('img');
+                img.src = card.imageUrl;
+                img.alt = card.display;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'contain';
+                img.style.borderRadius = '8px';
+                
+                cardDiv.appendChild(img);
                 cardDiv.addEventListener('click', () => handleCardSelect(card));
                 elements.cardGrid.appendChild(cardDiv);
             });
@@ -680,34 +677,46 @@
             gameState.memorizedCards.forEach((card, index) => {
                 const container = document.createElement('div');
                 container.style.textAlign = 'center';
+                container.style.position = 'relative';
                 
                 const isCorrect = gameState.quizAnswers[index]?.id === card.id;
                 
+                // Carta correta (sempre com borda verde)
                 const cardDiv = document.createElement('div');
-                cardDiv.className = `sequence-card ${isCorrect ? 'correct' : 'incorrect'}`;
+                cardDiv.className = 'sequence-card correct';
                 
-                const frontDiv = document.createElement('div');
-                frontDiv.className = 'card-front';
-                frontDiv.style.color = card.color;
-                frontDiv.textContent = card.display;
-                cardDiv.appendChild(frontDiv);
+                const img = document.createElement('img');
+                img.src = card.imageUrl;
+                img.alt = card.display;
+                img.className = 'card-back';
                 
+                cardDiv.appendChild(img);
                 container.appendChild(cardDiv);
+                
+                // Se errou, mostrar carta escolhida sobreposta
+                if (!isCorrect) {
+                    const incorrectCardDiv = document.createElement('div');
+                    incorrectCardDiv.className = 'sequence-card incorrect';
+                    incorrectCardDiv.style.position = 'absolute';
+                    incorrectCardDiv.style.top = '0';
+                    incorrectCardDiv.style.left = '30%';
+                    incorrectCardDiv.style.transform = 'translateX(25%) rotate(2deg)';
+                    incorrectCardDiv.style.zIndex = '10';
+                    
+                    const incorrectImg = document.createElement('img');
+                    incorrectImg.src = gameState.quizAnswers[index].imageUrl;
+                    incorrectImg.alt = gameState.quizAnswers[index].display;
+                    incorrectImg.className = 'card-back';
+                    
+                    incorrectCardDiv.appendChild(incorrectImg);
+                    container.appendChild(incorrectCardDiv);
+                }
                 
                 const resultSpan = document.createElement('div');
                 resultSpan.style.marginTop = '10px';
                 resultSpan.style.fontSize = '0.9em';
                 resultSpan.textContent = isCorrect ? '✓' : '✗';
                 container.appendChild(resultSpan);
-                
-                if (!isCorrect) {
-                    const answerDiv = document.createElement('div');
-                    answerDiv.style.fontSize = '0.8em';
-                    answerDiv.style.marginTop = '5px';
-                    answerDiv.style.color = card.color === 'red' ? '#fee' : '#eee';
-                    answerDiv.textContent = `Você: ${gameState.quizAnswers[index]?.display}`;
-                    container.appendChild(answerDiv);
-                }
                 
                 elements.comparisonDisplay.appendChild(container);
             });
@@ -731,4 +740,4 @@
         initGame();
     </script>
 </body>
-  </html>
+    </html>
