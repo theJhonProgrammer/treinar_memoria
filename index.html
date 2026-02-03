@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo de Memória - Sequência de Cartas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .deck-container {
+            position: relative;
+            width: 150px;
+            height: 210px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .deck-container:hover {
+            transform: translateY(-10px);
+        }
+
+        .deck-image {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-count {
+            text-align: center;
+            font-size: 1.2em;
+            color: #333;
+            margin-top: 15px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-card {
+            font-size: 120px;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Quiz Styles */
+        .quiz-container {
+            width: 100%;
+            display: none;
+        }
+
+        .quiz-container.active {
+            display: block;
+        }
+
+        .sequence-display {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .sequence-card {
+            width: 100px;
+            height: 140px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .sequence-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .sequence-card.selected {
+            border: 3px solid #10b981;
+        }
+
+        .sequence-card.correct {
+            border: 3px solid #10b981;
+        }
+
+        .sequence-card.incorrect {
+            border: 3px solid #ef4444;
+        }
+
+        .card-back {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .card-front {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+
+        .card-number {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .card-selector {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .card-selector.active {
+            display: block;
+        }
+
+        .selector-title {
+            text-align: center;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .selectable-card {
+            width: 100%;
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .selectable-card:hover {
+            transform: scale(1.1);
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .results {
+            text-align: center;
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .results h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .results p {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .card-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .card-grid::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .card-grid::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .sequence-card {
+                width: 70px;
+                height: 100px;
+            }
+
+            .card-front {
+                font-size: 40px;
+            }
+
+            .modal-card {
+                font-size: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎴 Jogo de Memória - Sequência de Cartas</h1>
+
+        <!-- Área de Memorização -->
+        <div class="game-area" id="gameArea">
+            <div class="deck-container" id="deckContainer">
+                <img 
+                    src="./JNA_baralho_verso.png" 
+                    alt="Baralho" 
+                    class="deck-image"
+                />
+            </div>
+            <div class="card-count" id="cardCount">
+                Cartas memorizadas: 0
+            </div>
+            <div class="controls">
+                <button class="btn-success" id="btnStartQuiz" disabled>
+                    Sequência Memorizada ✓
+                </button>
+                <button class="btn-danger" id="btnReset">
+                    Reiniciar
+                </button>
+            </div>
+        </div>
+
+        <!-- Área do Quiz -->
+        <div class="quiz-container" id="quizContainer">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #333;">
+                Quiz - Qual foi a sequência?
+            </h2>
+            <div class="sequence-display" id="sequenceDisplay"></div>
+
+            <div class="card-selector" id="cardSelector">
+                <h3 class="selector-title" id="selectorTitle">
+                    Selecione a carta da posição 1
+                </h3>
+                <div class="card-grid" id="cardGrid"></div>
+            </div>
+
+            <div class="controls" style="margin-top: 30px;">
+                <button class="btn-success" id="btnCheckAnswers" disabled>
+                    Verificar Respostas
+                </button>
+                <button class="btn-danger" id="btnResetQuiz">
+                    Reiniciar
+                </button>
+            </div>
+        </div>
+
+        <!-- Área de Resultados -->
+        <div class="results" id="resultsArea">
+            <h2>🎉 Resultados</h2>
+            <p id="scoreText"></p>
+            <p id="percentageText"></p>
+            
+            <div style="margin-top: 30px;">
+                <h3 style="margin-bottom: 20px;">Comparação:</h3>
+                <div class="sequence-display" id="comparisonDisplay"></div>
+            </div>
+
+            <button class="btn-primary" id="btnPlayAgain" style="margin-top: 30px;">
+                Jogar Novamente
+            </button>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal-overlay" id="modalOverlay">
+            <div class="modal-content">
+                <h2 class="modal-title">Memorize esta carta</h2>
+                <div class="modal-card" id="modalCard"></div>
+                <button class="btn-primary" id="btnCardMemorized">
+                    Carta Memorizada ✓
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado do jogo
+        const gameState = {
+            deck: [],
+            memorizedCards: [],
+            currentCard: null,
+            gamePhase: 'memorizing', // memorizing, quiz, results
+            selectedPosition: null,
+            quizAnswers: [],
+            score: 0
+        };
+
+        // Criar baralho com 52 cartas
+        function createDeck() {
+            const suits = ['♠', '♥', '♦', '♣'];
+            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            const deck = [];
+
+            suits.forEach(suit => {
+                values.forEach(value => {
+                    deck.push({
+                        id: `${value}${suit}`,
+                        value: value,
+                        suit: suit,
+                        display: `${value}${suit}`,
+                        color: (suit === '♥' || suit === '♦') ? 'red' : 'black'
+                    });
+                });
+            });
+
+            return deck;
+        }
+
+        // Elementos do DOM
+        const elements = {
+            deckContainer: document.getElementById('deckContainer'),
+            cardCount: document.getElementById('cardCount'),
+            btnStartQuiz: document.getElementById('btnStartQuiz'),
+            btnReset: document.getElementById('btnReset'),
+            gameArea: document.getElementById('gameArea'),
+            quizContainer: document.getElementById('quizContainer'),
+            sequenceDisplay: document.getElementById('sequenceDisplay'),
+            cardSelector: document.getElementById('cardSelector'),
+            selectorTitle: document.getElementById('selectorTitle'),
+            cardGrid: document.getElementById('cardGrid'),
+            btnCheckAnswers: document.getElementById('btnCheckAnswers'),
+            btnResetQuiz: document.getElementById('btnResetQuiz'),
+            resultsArea: document.getElementById('resultsArea'),
+            scoreText: document.getElementById('scoreText'),
+            percentageText: document.getElementById('percentageText'),
+            comparisonDisplay: document.getElementById('comparisonDisplay'),
+            btnPlayAgain: document.getElementById('btnPlayAgain'),
+            modalOverlay: document.getElementById('modalOverlay'),
+            modalCard: document.getElementById('modalCard'),
+            btnCardMemorized: document.getElementById('btnCardMemorized')
+        };
+
+        // Inicializar jogo
+        function initGame() {
+            gameState.deck = createDeck();
+            gameState.memorizedCards = [];
+            gameState.quizAnswers = [];
+            gameState.gamePhase = 'memorizing';
+            gameState.selectedPosition = null;
+            gameState.score = 0;
+
+            updateUI();
+            renderCardGrid();
+        }
+
+        // Atualizar interface
+        function updateUI() {
+            elements.cardCount.textContent = `Cartas memorizadas: ${gameState.memorizedCards.length}`;
+            elements.btnStartQuiz.disabled = gameState.memorizedCards.length === 0;
+
+            // Mostrar/ocultar áreas baseado na fase
+            if (gameState.gamePhase === 'memorizing') {
+                elements.gameArea.classList.remove('hidden');
+                elements.quizContainer.classList.remove('active');
+                elements.resultsArea.classList.remove('active');
+            } else if (gameState.gamePhase === 'quiz') {
+                elements.gameArea.classList.add('hidden');
+                elements.quizContainer.classList.add('active');
+                elements.resultsArea.classList.remove('active');
+            } else if (gameState.gamePhase === 'results') {
+                elements.gameArea.classList.add('hidden');
+                elements.quizContainer.classList.remove('active');
+                elements.resultsArea.classList.add('active');
+            }
+        }
+
+        // Clique no baralho
+        function handleDeckClick() {
+            if (gameState.gamePhase === 'memorizing') {
+                const availableCards = gameState.deck.filter(
+                    card => !gameState.memorizedCards.find(mc => mc.id === card.id)
+                );
+
+                if (availableCards.length > 0) {
+                    const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+                    gameState.currentCard = randomCard;
+                    showModal(randomCard);
+                }
+            }
+        }
+
+        // Mostrar modal
+        function showModal(card) {
+            elements.modalCard.textContent = card.display;
+            elements.modalCard.style.color = card.color;
+            elements.modalOverlay.classList.add('active');
+        }
+
+        // Fechar modal
+        function closeModal() {
+            elements.modalOverlay.classList.remove('active');
+        }
+
+        // Carta memorizada
+        function handleCardMemorized() {
+            gameState.memorizedCards.push(gameState.currentCard);
+            gameState.currentCard = null;
+            closeModal();
+            updateUI();
+        }
+
+        // Iniciar quiz
+        function startQuiz() {
+            gameState.gamePhase = 'quiz';
+            gameState.quizAnswers = Array(gameState.memorizedCards.length).fill(null);
+            renderQuiz();
+            updateUI();
+        }
+
+        // Renderizar quiz
+        function renderQuiz() {
+            elements.sequenceDisplay.innerHTML = '';
+            
+            gameState.memorizedCards.forEach((card, index) => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'sequence-card';
+                cardDiv.dataset.index = index;
+                
+                const numberSpan = document.createElement('span');
+                numberSpan.className = 'card-number';
+                numberSpan.textContent = index + 1;
+                cardDiv.appendChild(numberSpan);
+
+                if (gameState.quizAnswers[index]) {
+                    const frontDiv = document.createElement('div');
+                    frontDiv.className = 'card-front';
+                    frontDiv.style.color = gameState.quizAnswers[index].color;
+                    frontDiv.textContent = gameState.quizAnswers[index].display;
+                    cardDiv.appendChild(frontDiv);
+                } else {
+                    const img = document.createElement('img');
+                    img.src = './JNA_baralho_verso.png';
+                    img.alt = 'Verso';
+                    img.className = 'card-back';
+                    cardDiv.appendChild(img);
+                }
+
+                cardDiv.addEventListener('click', () => handlePositionClick(index));
+                elements.sequenceDisplay.appendChild(cardDiv);
+            });
+
+            updateCheckButton();
+        }
+
+        // Clique em posição do quiz
+        function handlePositionClick(index) {
+            if (gameState.quizAnswers[index] === null) {
+                gameState.selectedPosition = index;
+                elements.selectorTitle.textContent = `Selecione a carta da posição ${index + 1}`;
+                elements.cardSelector.classList.add('active');
+                
+                // Destacar carta selecionada
+                document.querySelectorAll('.sequence-card').forEach((card, i) => {
+                    if (i === index) {
+                        card.classList.add('selected');
+                    } else {
+                        card.classList.remove('selected');
+                    }
+                });
+            }
+        }
+
+        // Renderizar grid de cartas
+        function renderCardGrid() {
+            elements.cardGrid.innerHTML = '';
+            
+            gameState.deck.forEach(card => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'selectable-card';
+                cardDiv.style.color = card.color;
+                cardDiv.textContent = card.display;
+                cardDiv.addEventListener('click', () => handleCardSelect(card));
+                elements.cardGrid.appendChild(cardDiv);
+            });
+        }
+
+        // Selecionar carta
+        function handleCardSelect(card) {
+            gameState.quizAnswers[gameState.selectedPosition] = card;
+            elements.cardSelector.classList.remove('active');
+            
+            // Remover seleção
+            document.querySelectorAll('.sequence-card').forEach(c => {
+                c.classList.remove('selected');
+            });
+            
+            renderQuiz();
+            gameState.selectedPosition = null;
+        }
+
+        // Atualizar botão de verificar
+        function updateCheckButton() {
+            const isComplete = gameState.quizAnswers.every(answer => answer !== null);
+            elements.btnCheckAnswers.disabled = !isComplete;
+        }
+
+        // Verificar respostas
+        function checkAnswers() {
+            let correctCount = 0;
+            gameState.quizAnswers.forEach((answer, index) => {
+                if (answer && answer.id === gameState.memorizedCards[index].id) {
+                    correctCount++;
+                }
+            });
+            
+            gameState.score = correctCount;
+            gameState.gamePhase = 'results';
+            renderResults();
+            updateUI();
+        }
+
+        // Renderizar resultados
+        function renderResults() {
+            const total = gameState.memorizedCards.length;
+            const percentage = Math.round((gameState.score / total) * 100);
+            
+            elements.scoreText.textContent = `Você acertou ${gameState.score} de ${total} cartas!`;
+            elements.percentageText.textContent = `Percentual de acerto: ${percentage}%`;
+            
+            // Renderizar comparação
+            elements.comparisonDisplay.innerHTML = '';
+            
+            gameState.memorizedCards.forEach((card, index) => {
+                const container = document.createElement('div');
+                container.style.textAlign = 'center';
+                
+                const isCorrect = gameState.quizAnswers[index]?.id === card.id;
+                
+                const cardDiv = document.createElement('div');
+                cardDiv.className = `sequence-card ${isCorrect ? 'correct' : 'incorrect'}`;
+                
+                const frontDiv = document.createElement('div');
+                frontDiv.className = 'card-front';
+                frontDiv.style.color = card.color;
+                frontDiv.textContent = card.display;
+                cardDiv.appendChild(frontDiv);
+                
+                container.appendChild(cardDiv);
+                
+                const resultSpan = document.createElement('div');
+                resultSpan.style.marginTop = '10px';
+                resultSpan.style.fontSize = '0.9em';
+                resultSpan.textContent = isCorrect ? '✓' : '✗';
+                container.appendChild(resultSpan);
+                
+                if (!isCorrect) {
+                    const answerDiv = document.createElement('div');
+                    answerDiv.style.fontSize = '0.8em';
+                    answerDiv.style.marginTop = '5px';
+                    answerDiv.style.color = card.color === 'red' ? '#fee' : '#eee';
+                    answerDiv.textContent = `Você: ${gameState.quizAnswers[index]?.display}`;
+                    container.appendChild(answerDiv);
+                }
+                
+                elements.comparisonDisplay.appendChild(container);
+            });
+        }
+
+        // Resetar jogo
+        function resetGame() {
+            initGame();
+        }
+
+        // Event Listeners
+        elements.deckContainer.addEventListener('click', handleDeckClick);
+        elements.btnCardMemorized.addEventListener('click', handleCardMemorized);
+        elements.btnStartQuiz.addEventListener('click', startQuiz);
+        elements.btnReset.addEventListener('click', resetGame);
+        elements.btnResetQuiz.addEventListener('click', resetGame);
+        elements.btnCheckAnswers.addEventListener('click', checkAnswers);
+        elements.btnPlayAgain.addEventListener('click', resetGame);
+
+        // Iniciar o jogo
+        initGame();
+    </script>
+</body>
+  </html>
